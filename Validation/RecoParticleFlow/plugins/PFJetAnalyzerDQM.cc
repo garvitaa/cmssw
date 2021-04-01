@@ -114,6 +114,11 @@ private:
   std::vector<Plot1DInBin> jetResponsePlots;
   std::vector<Plot1DInBin> jetResponsePlots_noJEC;
   std::vector<Plot1DInBinVariable> genJetPlots;
+  std::vector<Plot1DInBinVariable> genJetPlots_matched;
+  std::vector<Plot1DInBinVariable> genJetPlots_unmatched;
+  std::vector<Plot1DInBinVariable> recoJetPlots;
+  std::vector<Plot1DInBinVariable> recoJetPlots_matched;
+  std::vector<Plot1DInBinVariable> recoJetPlots_unmatched;
 
   // Is this data or MC?
   bool isMC;
@@ -133,6 +138,11 @@ private:
   void fillJetResponse(edm::View<pat::Jet>& recoJetCollection, edm::View<reco::Jet>& genJetCollection);
   void prepareJetResponsePlots(const std::vector<edm::ParameterSet>& genjet_plots_pset);
   void prepareGenJetPlots(const std::vector<edm::ParameterSet>& genjet_plots_pset);
+  void prepareGenJetMatchedPlots(const std::vector<edm::ParameterSet>& genjet_plots_pset);
+  void prepareGenJetUnmatchedPlots(const std::vector<edm::ParameterSet>& genjet_plots_pset);
+  void prepareRecoJetPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
+  void prepareRecoJetMatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
+  void prepareRecoJetUnmatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
 };
 
 void PFJetAnalyzerDQM::prepareJetResponsePlots(const std::vector<edm::ParameterSet>& response_plots) {
@@ -188,6 +198,121 @@ void PFJetAnalyzerDQM::prepareGenJetPlots(const std::vector<edm::ParameterSet>& 
   }
 }
 
+void PFJetAnalyzerDQM::prepareGenJetMatchedPlots(const std::vector<edm::ParameterSet>& genjet_plots_pset) {
+  for (auto& pset : genjet_plots_pset) {
+    const auto name = pset.getParameter<std::string>("name")+"_matched";
+    const auto title = "Matched " + pset.getParameter<std::string>("title");
+
+    //Low and high edges of the eta bins for jets to pass to be filled into this histogram
+    const auto ptbins_d = pset.getParameter<std::vector<double>>("ptBins");
+    std::vector<float> ptbins(ptbins_d.begin(), ptbins_d.end());
+
+    const auto etabin_low = pset.getParameter<double>("etaBinLow");
+    const auto etabin_high = pset.getParameter<double>("etaBinHigh");
+
+    genJetPlots_matched.push_back(Plot1DInBinVariable(
+        name,
+        title,
+        std::make_unique<TH1F>(name.c_str(), title.c_str(), static_cast<int>(ptbins.size()) - 1, ptbins.data()),
+        0.0,
+        0.0,
+        etabin_low,
+        etabin_high));
+  }
+}
+
+void PFJetAnalyzerDQM::prepareGenJetUnmatchedPlots(const std::vector<edm::ParameterSet>& genjet_plots_pset) {
+  for (auto& pset : genjet_plots_pset) {
+    const auto name = pset.getParameter<std::string>("name")+"_unmatched";
+    const auto title = "Unmatched " + pset.getParameter<std::string>("title");
+
+    //Low and high edges of the eta bins for jets to pass to be filled into this histogram
+    const auto ptbins_d = pset.getParameter<std::vector<double>>("ptBins");
+    std::vector<float> ptbins(ptbins_d.begin(), ptbins_d.end());
+
+    const auto etabin_low = pset.getParameter<double>("etaBinLow");
+    const auto etabin_high = pset.getParameter<double>("etaBinHigh");
+
+    genJetPlots_unmatched.push_back(Plot1DInBinVariable(
+        name,
+        title,
+        std::make_unique<TH1F>(name.c_str(), title.c_str(), static_cast<int>(ptbins.size()) - 1, ptbins.data()),
+        0.0,
+        0.0,
+        etabin_low,
+        etabin_high));
+  }
+}
+
+void PFJetAnalyzerDQM::prepareRecoJetPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset) {
+  for (auto& pset : recojet_plots_pset) {
+    const auto name = pset.getParameter<std::string>("name");
+    const auto title = pset.getParameter<std::string>("title");
+
+    //Low and high edges of the eta bins for jets to pass to be filled into this histogram
+    const auto ptbins_d = pset.getParameter<std::vector<double>>("ptBins");
+    std::vector<float> ptbins(ptbins_d.begin(), ptbins_d.end());
+
+    const auto etabin_low = pset.getParameter<double>("etaBinLow");
+    const auto etabin_high = pset.getParameter<double>("etaBinHigh");
+
+    recoJetPlots.push_back(Plot1DInBinVariable(
+        name,
+        title,
+        std::make_unique<TH1F>(name.c_str(), title.c_str(), static_cast<int>(ptbins.size()) - 1, ptbins.data()),
+        0.0,
+        0.0,
+        etabin_low,
+        etabin_high));
+  }
+}
+
+void PFJetAnalyzerDQM::prepareRecoJetMatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset) {
+  for (auto& pset : recojet_plots_pset) {
+    const auto name = pset.getParameter<std::string>("name")+"_matched";
+    const auto title = "Matched " + pset.getParameter<std::string>("title");
+
+    //Low and high edges of the eta bins for jets to pass to be filled into this histogram
+    const auto ptbins_d = pset.getParameter<std::vector<double>>("ptBins");
+    std::vector<float> ptbins(ptbins_d.begin(), ptbins_d.end());
+
+    const auto etabin_low = pset.getParameter<double>("etaBinLow");
+    const auto etabin_high = pset.getParameter<double>("etaBinHigh");
+
+    recoJetPlots_matched.push_back(Plot1DInBinVariable(
+        name,
+        title,
+        std::make_unique<TH1F>(name.c_str(), title.c_str(), static_cast<int>(ptbins.size()) - 1, ptbins.data()),
+        0.0,
+        0.0,
+        etabin_low,
+        etabin_high));
+  }
+}
+
+void PFJetAnalyzerDQM::prepareRecoJetUnmatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset) {
+  for (auto& pset : recojet_plots_pset) {
+    const auto name = pset.getParameter<std::string>("name")+"_unmatched";
+    const auto title = "Unmatched " + pset.getParameter<std::string>("title");
+
+    //Low and high edges of the eta bins for jets to pass to be filled into this histogram
+    const auto ptbins_d = pset.getParameter<std::vector<double>>("ptBins");
+    std::vector<float> ptbins(ptbins_d.begin(), ptbins_d.end());
+
+    const auto etabin_low = pset.getParameter<double>("etaBinLow");
+    const auto etabin_high = pset.getParameter<double>("etaBinHigh");
+
+    recoJetPlots_unmatched.push_back(Plot1DInBinVariable(
+        name,
+        title,
+        std::make_unique<TH1F>(name.c_str(), title.c_str(), static_cast<int>(ptbins.size()) - 1, ptbins.data()),
+        0.0,
+        0.0,
+        etabin_low,
+        etabin_high));
+  }
+}
+
 PFJetAnalyzerDQM::PFJetAnalyzerDQM(const edm::ParameterSet& iConfig) {
   recoJetsLabel = iConfig.getParameter<edm::InputTag>("recoJetCollection");
   genJetsLabel = iConfig.getParameter<edm::InputTag>("genJetCollection");
@@ -207,27 +332,86 @@ PFJetAnalyzerDQM::PFJetAnalyzerDQM(const edm::ParameterSet& iConfig) {
 
   const auto& genjet_plots = iConfig.getParameter<std::vector<edm::ParameterSet>>("genJetPlots");
   prepareGenJetPlots(genjet_plots);
+  prepareGenJetMatchedPlots(genjet_plots);
+  prepareGenJetUnmatchedPlots(genjet_plots);
+
+  const auto& recojet_plots = iConfig.getParameter<std::vector<edm::ParameterSet>>("recoJetPlots");
+  prepareRecoJetPlots(recojet_plots);
+  prepareRecoJetMatchedPlots(recojet_plots);
+  prepareRecoJetUnmatchedPlots(recojet_plots);
 
   recoJetsToken = consumes<edm::View<pat::Jet>>(recoJetsLabel);
   genJetsToken = consumes<edm::View<reco::Jet>>(genJetsLabel);
+  
 }
 
 void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, edm::View<reco::Jet>& genJetCollection) {
   //match gen jets to reco jets, require minimum jetDeltaR, choose closest, do not try to match charge
   std::vector<int> matchIndices;
+  std::vector<int> matchIndicesReco;
   PFB::match(genJetCollection, recoJetCollection, matchIndices, false, jetDeltaR);
+  PFB::match(recoJetCollection, genJetCollection, matchIndicesReco, false, jetDeltaR);
 
+  //std::cout << "\n"<<std::endl;
+  //double pt_reco_min=99999., pt_gen_min=99999.;
+  //Fill recojet pt if genJetOn
+  for (unsigned int i = 0; i < recoJetCollection.size(); i++) {
+    const auto& recoJet = recoJetCollection.at(i);
+    const auto pt_reco = recoJet.pt();
+    const auto eta_reco = abs(recoJet.eta());
+    const int iMatch_reco = matchIndicesReco[i];
+    //if (pt_reco_min > pt_reco) pt_reco_min = pt_reco;
+    //std::cout << "Reco pT: " << pt_reco * recoJet.jecFactor("Uncorrected") << " Reco eta: " << eta_reco <<  " Reco iMatch: " << iMatch_reco << std::endl;
+    if (genJetsOn) {
+      for (auto& plot : recoJetPlots){
+        if (plot.isInEtaBin(eta_reco)) {
+          plot.fill(pt_reco);
+        }
+      }
+      if (iMatch_reco != -1){
+        for (auto& plot : recoJetPlots_matched){
+          if (plot.isInEtaBin(eta_reco)) {
+            plot.fill(pt_reco);
+          }
+        }
+      }
+      else {
+        for (auto& plot : recoJetPlots_unmatched){
+          if (plot.isInEtaBin(eta_reco)) {
+            plot.fill(pt_reco);
+          }
+        }
+      }
+    }
+  }
+  //std::cout << "\n"<<std::endl;
   for (unsigned int i = 0; i < genJetCollection.size(); i++) {
     const auto& genJet = genJetCollection.at(i);
     const auto pt_gen = genJet.pt();
     const auto eta_gen = abs(genJet.eta());
     const int iMatch = matchIndices[i];
+    //if (pt_gen_min > pt_gen) pt_gen_min = pt_gen;
+    //std::cout << "Gen pT: " << pt_gen << " Gen eta: " << eta_gen << " Gen iMatch: " << iMatch << std::endl;
 
     //Fill genjet pt if genJetOn
     if (genJetsOn) {
       for (auto& plot : genJetPlots) {
         if (plot.isInEtaBin(eta_gen)) {
           plot.fill(pt_gen);
+        }
+      }
+      if (iMatch != -1){
+        for (auto& plot : genJetPlots_matched){
+          if (plot.isInEtaBin(eta_gen)) {
+            plot.fill(pt_gen);
+          }
+        }
+      }
+      else {
+        for (auto& plot : genJetPlots_unmatched){
+          if (plot.isInEtaBin(eta_gen)) {
+            plot.fill(pt_gen);
+          }
         }
       }
     }
@@ -256,6 +440,7 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
       }
     }
   }
+  //std::cout <<"\n Min Reco: " << pt_reco_min << " Min Gen: " << pt_gen_min << std::endl;
 }
 
 void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&, edm::EventSetup const&) {
@@ -263,9 +448,25 @@ void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&
   for (auto& plot : jetResponsePlots) {
     plot.book(booker);
   }
+  
   //Book plots for noJEC
   booker.setCurrentFolder("ParticleFlow/JetResponse/" + jetCollectionName + "/noJEC/");
   for (auto& plot : jetResponsePlots_noJEC) {
+    plot.book(booker);
+  }
+  for (auto& plot : recoJetPlots) {
+    plot.book(booker);
+  }
+  for (auto& plot : recoJetPlots_matched) {
+    plot.book(booker);
+  }
+  for (auto& plot : recoJetPlots_unmatched) {
+    plot.book(booker);
+  }
+  for (auto& plot : genJetPlots_matched) {
+    plot.book(booker);
+  }
+  for (auto& plot : genJetPlots_unmatched) {
     plot.book(booker);
   }
 
