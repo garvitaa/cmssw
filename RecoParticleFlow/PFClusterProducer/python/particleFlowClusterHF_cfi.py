@@ -37,11 +37,11 @@ _localMaxSeeds_HF = cms.PSet(
     thresholdsByDetector = cms.VPSet(
     cms.PSet( detector = cms.string("HF_EM"),
               seedingThreshold = cms.double(1.4),
-              seedingThresholdPt = cms.double(0.0)
+              seedingThresholdPt = cms.double(0.3) ##GA 0.0->0.3
               ),
     cms.PSet( detector = cms.string("HF_HAD"),
               seedingThreshold = cms.double(1.4),
-              seedingThresholdPt = cms.double(0.0)
+              seedingThresholdPt = cms.double(0.3) ##GA 0.0->0.3
               )
 
     ),
@@ -54,11 +54,11 @@ _topoClusterizer_HF = cms.PSet(
     thresholdsByDetector = cms.VPSet(
     cms.PSet( detector = cms.string("HF_EM"),
               gatheringThreshold = cms.double(0.8),
-              gatheringThresholdPt = cms.double(0.0)
+              gatheringThresholdPt = cms.double(0.1) ##GA 0.0->0.1
               ),
     cms.PSet( detector = cms.string("HF_HAD"),
               gatheringThreshold = cms.double(0.8),
-              gatheringThresholdPt = cms.double(0.0)
+              gatheringThresholdPt = cms.double(0.1) ##GA 0.0->0.1
               )
 
     ),
@@ -76,7 +76,7 @@ _positionCalcHF_cross_nodepth = cms.PSet(
 )
 
 _positionCalcHF_all_nodepth = _positionCalcHF_cross_nodepth.clone(
-    posCalcNCrystals = -1
+    posCalcNCrystals = cms.int32(-1)
     )
 
 #pf clusters
