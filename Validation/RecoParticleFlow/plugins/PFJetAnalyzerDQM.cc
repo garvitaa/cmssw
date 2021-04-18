@@ -395,9 +395,11 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
 
     //Fill genjet pt if genJetOn
     if (genJetsOn) {
-      for (auto& plot : genJetPlots) {
-        if (plot.isInEtaBin(eta_gen)) {
-          plot.fill(pt_gen);
+      if (jetCollectionName == "SlimmedJets"){ //Otherwise genjets_pt gets filled twice
+        for (auto& plot : genJetPlots) {
+          if (plot.isInEtaBin(eta_gen)) {
+            plot.fill(pt_gen);
+          }
         }
       }
       if (iMatch != -1){
