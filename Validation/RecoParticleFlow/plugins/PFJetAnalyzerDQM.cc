@@ -125,7 +125,7 @@ private:
 
   float jetDeltaR;
 
-  bool genJetsOn;
+  bool genJetsOn, recoJetsOn;
 
   std::string jetCollectionName;
 
@@ -143,6 +143,8 @@ private:
   void prepareRecoJetPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
   void prepareRecoJetMatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
   void prepareRecoJetUnmatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
+
+  double pt_reco_min=99999.,pt_recoRaw_min=99999., pt_gen_min=99999.; // for finding pT thresholds applied
 };
 
 void PFJetAnalyzerDQM::prepareJetResponsePlots(const std::vector<edm::ParameterSet>& response_plots) {
@@ -325,6 +327,7 @@ PFJetAnalyzerDQM::PFJetAnalyzerDQM(const edm::ParameterSet& iConfig) {
 
   //for turn genJet on/off
   genJetsOn = iConfig.getParameter<bool>("genJetsOn");
+  recoJetsOn = iConfig.getParameter<bool>("recoJetsOn");
 
   //Create all jet response plots in bins of genjet pt and eta
   const auto& response_plots = iConfig.getParameter<std::vector<edm::ParameterSet>>("responsePlots");
@@ -352,17 +355,16 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
   PFB::match(genJetCollection, recoJetCollection, matchIndices, false, jetDeltaR);
   PFB::match(recoJetCollection, genJetCollection, matchIndicesReco, false, jetDeltaR);
 
-  //std::cout << "\n"<<std::endl;
-  //double pt_reco_min=99999., pt_gen_min=99999.;
   //Fill recojet pt if genJetOn
   for (unsigned int i = 0; i < recoJetCollection.size(); i++) {
     const auto& recoJet = recoJetCollection.at(i);
     const auto pt_reco = recoJet.pt();
     const auto eta_reco = abs(recoJet.eta());
     const int iMatch_reco = matchIndicesReco[i];
-    //if (pt_reco_min > pt_reco) pt_reco_min = pt_reco;
+    if (pt_reco < pt_reco_min) pt_reco_min = pt_reco;
+    if ((pt_reco * recoJet.jecFactor("Uncorrected")) < pt_reco_min) pt_recoRaw_min = (pt_reco * recoJet.jecFactor("Uncorrected"));
     //std::cout << "Reco pT: " << pt_reco * recoJet.jecFactor("Uncorrected") << " Reco eta: " << eta_reco <<  " Reco iMatch: " << iMatch_reco << std::endl;
-    if (genJetsOn) {
+    if (recoJetsOn) {
       for (auto& plot : recoJetPlots){
         if (plot.isInEtaBin(eta_reco)) {
           plot.fill(pt_reco);
@@ -384,24 +386,24 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
       }
     }
   }
-  //std::cout << "\n"<<std::endl;
+
   for (unsigned int i = 0; i < genJetCollection.size(); i++) {
     const auto& genJet = genJetCollection.at(i);
     const auto pt_gen = genJet.pt();
     const auto eta_gen = abs(genJet.eta());
     const int iMatch = matchIndices[i];
-    //if (pt_gen_min > pt_gen) pt_gen_min = pt_gen;
+    if (pt_gen < pt_gen_min) pt_gen_min = pt_gen;
     //std::cout << "Gen pT: " << pt_gen << " Gen eta: " << eta_gen << " Gen iMatch: " << iMatch << std::endl;
 
     //Fill genjet pt if genJetOn
     if (genJetsOn) {
-      if (jetCollectionName == "SlimmedJets"){ //Otherwise genjets_pt gets filled twice
-        for (auto& plot : genJetPlots) {
-          if (plot.isInEtaBin(eta_gen)) {
-            plot.fill(pt_gen);
-          }
+      for (auto& plot : genJetPlots) {
+        if (plot.isInEtaBin(eta_gen)) {
+          plot.fill(pt_gen);
         }
       }
+    }
+    if (recoJetsOn) {
       if (iMatch != -1){
         for (auto& plot : genJetPlots_matched){
           if (plot.isInEtaBin(eta_gen)) {
@@ -442,7 +444,6 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
       }
     }
   }
-  //std::cout <<"\n Min Reco: " << pt_reco_min << " Min Gen: " << pt_gen_min << std::endl;
 }
 
 void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&, edm::EventSetup const&) {
@@ -456,22 +457,24 @@ void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&
   for (auto& plot : jetResponsePlots_noJEC) {
     plot.book(booker);
   }
-  for (auto& plot : recoJetPlots) {
-    plot.book(booker);
+  if (recoJetsOn) {
+    booker.setCurrentFolder("ParticleFlow/JetResponse/" + jetCollectionName + "/noJEC/");
+    for (auto& plot : recoJetPlots) {
+      plot.book(booker);
+    }
+    for (auto& plot : recoJetPlots_matched) {
+      plot.book(booker);
+    }
+    for (auto& plot : recoJetPlots_unmatched) {
+      plot.book(booker);
+    }
+    for (auto& plot : genJetPlots_matched) {
+      plot.book(booker);
+    }
+    for (auto& plot : genJetPlots_unmatched) {
+      plot.book(booker);
+    }
   }
-  for (auto& plot : recoJetPlots_matched) {
-    plot.book(booker);
-  }
-  for (auto& plot : recoJetPlots_unmatched) {
-    plot.book(booker);
-  }
-  for (auto& plot : genJetPlots_matched) {
-    plot.book(booker);
-  }
-  for (auto& plot : genJetPlots_unmatched) {
-    plot.book(booker);
-  }
-
   //Book plots for gen-jet pt spectra
   if (genJetsOn) {
     booker.setCurrentFolder("ParticleFlow/GenJets/");
@@ -494,6 +497,7 @@ void PFJetAnalyzerDQM::analyze(const edm::Event& iEvent, const edm::EventSetup&)
     auto genJetCollection = *genJetCollectionHandle;
 
     fillJetResponse(recoJetCollection, genJetCollection);
+    std::cout <<"\n==== Min Reco: " << pt_reco_min << " Min Raw Reco: " << pt_recoRaw_min << " Min Gen: " << pt_gen_min << std::endl;
   }
 }
 
