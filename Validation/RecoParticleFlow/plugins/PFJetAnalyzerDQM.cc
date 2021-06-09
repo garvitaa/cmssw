@@ -355,7 +355,7 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
   PFB::match(genJetCollection, recoJetCollection, matchIndices, false, jetDeltaR);
   PFB::match(recoJetCollection, genJetCollection, matchIndicesReco, false, jetDeltaR);
 
-  //Fill recojet pt if genJetOn
+  //Fill recojet pt if recoJetOn
   for (unsigned int i = 0; i < recoJetCollection.size(); i++) {
     const auto& recoJet = recoJetCollection.at(i);
     const auto pt_reco = recoJet.pt();
@@ -363,7 +363,6 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
     const int iMatch_reco = matchIndicesReco[i];
     if (pt_reco < pt_reco_min) pt_reco_min = pt_reco;
     if ((pt_reco * recoJet.jecFactor("Uncorrected")) < pt_reco_min) pt_recoRaw_min = (pt_reco * recoJet.jecFactor("Uncorrected"));
-    //std::cout << "Reco pT: " << pt_reco * recoJet.jecFactor("Uncorrected") << " Reco eta: " << eta_reco <<  " Reco iMatch: " << iMatch_reco << std::endl;
     if (recoJetsOn) {
       for (auto& plot : recoJetPlots){
         if (plot.isInEtaBin(eta_reco)) {
@@ -393,7 +392,6 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
     const auto eta_gen = abs(genJet.eta());
     const int iMatch = matchIndices[i];
     if (pt_gen < pt_gen_min) pt_gen_min = pt_gen;
-    //std::cout << "Gen pT: " << pt_gen << " Gen eta: " << eta_gen << " Gen iMatch: " << iMatch << std::endl;
 
     //Fill genjet pt if genJetOn
     if (genJetsOn) {
@@ -459,6 +457,13 @@ void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&
   }
   if (recoJetsOn) {
     booker.setCurrentFolder("ParticleFlow/JetResponse/" + jetCollectionName + "/noJEC/");
+    for (auto& plot : genJetPlots_matched) {
+      plot.book(booker);
+    }
+    for (auto& plot : genJetPlots_unmatched) {
+      plot.book(booker);
+    }
+    booker.setCurrentFolder("ParticleFlow/JetResponse/" + jetCollectionName + "/JEC/");
     for (auto& plot : recoJetPlots) {
       plot.book(booker);
     }
@@ -466,12 +471,6 @@ void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&
       plot.book(booker);
     }
     for (auto& plot : recoJetPlots_unmatched) {
-      plot.book(booker);
-    }
-    for (auto& plot : genJetPlots_matched) {
-      plot.book(booker);
-    }
-    for (auto& plot : genJetPlots_unmatched) {
       plot.book(booker);
     }
   }
@@ -483,7 +482,6 @@ void PFJetAnalyzerDQM::bookHistograms(DQMStore::IBooker& booker, edm::Run const&
     }
   }
 }
-
 void PFJetAnalyzerDQM::analyze(const edm::Event& iEvent, const edm::EventSetup&) {
   edm::Handle<edm::View<pat::Jet>> recoJetCollectionHandle;
   iEvent.getByToken(recoJetsToken, recoJetCollectionHandle);
@@ -497,7 +495,6 @@ void PFJetAnalyzerDQM::analyze(const edm::Event& iEvent, const edm::EventSetup&)
     auto genJetCollection = *genJetCollectionHandle;
 
     fillJetResponse(recoJetCollection, genJetCollection);
-    std::cout <<"\n==== Min Reco: " << pt_reco_min << " Min Raw Reco: " << pt_recoRaw_min << " Min Gen: " << pt_gen_min << std::endl;
   }
 }
 
