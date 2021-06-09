@@ -359,8 +359,6 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
     const auto pt_reco = recoJet.pt();
     const auto eta_reco = abs(recoJet.eta());
     const int iMatch_reco = matchIndicesReco[i];
-    if (pt_reco < pt_reco_min) pt_reco_min = pt_reco;
-    if ((pt_reco * recoJet.jecFactor("Uncorrected")) < pt_reco_min) pt_recoRaw_min = (pt_reco * recoJet.jecFactor("Uncorrected"));
     if (recoJetsOn) {
       for (auto& plot : recoJetPlots){
         if (plot.isInEtaBin(eta_reco)) {
@@ -389,7 +387,6 @@ void PFJetAnalyzerDQM::fillJetResponse(edm::View<pat::Jet>& recoJetCollection, e
     const auto pt_gen = genJet.pt();
     const auto eta_gen = abs(genJet.eta());
     const int iMatch = matchIndices[i];
-    if (pt_gen < pt_gen_min) pt_gen_min = pt_gen;
 
     //Fill genjet pt if genJetOn
     if (genJetsOn) {
