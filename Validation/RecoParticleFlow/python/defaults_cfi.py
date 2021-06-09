@@ -36,6 +36,7 @@ muHighOffset = 400
 
 npvLowOffset = 0
 npvHighOffset = 100
+pvzHighOffset = 100
 
 eBinsOffset = 1000
 eLowOffset = 0
