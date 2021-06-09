@@ -16,18 +16,8 @@ CSCUpgradeAnodeLCTProcessor::CSCUpgradeAnodeLCTProcessor(unsigned endcap,
         << "+++ Upgrade CSCUpgradeAnodeLCTProcessor constructed while enableAlctPhase2_ is not set! +++\n";
 }
 
-CSCUpgradeAnodeLCTProcessor::CSCUpgradeAnodeLCTProcessor() : CSCAnodeLCTProcessor() {
-  if (!runPhase2_)
-    edm::LogError("CSCUpgradeAnodeLCTProcessor|ConfigError")
-        << "+++ Upgrade CSCUpgradeAnodeLCTProcessor constructed while runPhase2_ is not set! +++\n";
-
-  if (!enableAlctPhase2_)
-    edm::LogError("CSCUpgradeAnodeLCTProcessor|ConfigError")
-        << "+++ Upgrade CSCUpgradeAnodeLCTProcessor constructed while enableAlctPhase2_ is not set! +++\n";
-}
-
 void CSCUpgradeAnodeLCTProcessor::ghostCancellationLogic() {
-  int ghost_cleared[CSCConstants::MAX_NUM_WIRES][2];
+  int ghost_cleared[CSCConstants::MAX_NUM_WIREGROUPS][2];
 
   for (int key_wire = 0; key_wire < numWireGroups; key_wire++) {
     for (int i_pattern = 0; i_pattern < 2; i_pattern++) {
@@ -194,9 +184,9 @@ int CSCUpgradeAnodeLCTProcessor::getTempALCTQuality(int temp_quality) const {
   // Quality definition changed on 22 June 2007: it no longer depends
   // on pattern_thresh.
   int Q;
-  // hack to run the Phase-II ME2/1, ME3/1 and ME4/1 ILT
+  // hack to run the Phase-II GE2/1-ME2/1 with 3-layer ALCTs
   if (temp_quality == 3 and runPhase2_ and runME21ILT_ and isME21_)
-    Q = 4;
+    Q = 1;
   else if (temp_quality > 3)
     Q = temp_quality - 3;
   else

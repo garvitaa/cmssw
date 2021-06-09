@@ -29,7 +29,7 @@
 #include "FWCore/Utilities/interface/TimeOfDay.h"
 #include "FWCore/PluginManager/interface/PluginManager.h"
 #include "FWCore/PluginManager/interface/standard.h"
-#include "FWCore/ParameterSet/interface/FileInPath.h"
+#include "FWCore/Utilities/interface/FileInPath.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescriptionFillerPluginFactory.h"
 #include "FWCore/Utilities/interface/Algorithms.h"
 #include "FWCore/PluginManager/interface/PluginInfo.h"
@@ -40,8 +40,6 @@
 #include "FWCore/PluginManager/interface/PluginFactoryManager.h"
 
 #include <boost/program_options.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 
 #include <set>
 #include <string>

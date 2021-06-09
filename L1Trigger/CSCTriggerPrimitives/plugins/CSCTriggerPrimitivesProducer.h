@@ -80,14 +80,11 @@ private:
   // switch to for enabling checking against the list of bad chambers
   bool checkBadChambers_;
 
-  // write out all CLCTs
-  bool writeOutAllCLCTs_;
-
-  // write out all ALCTs
-  bool writeOutAllALCTs_;
-
   // Write out pre-triggers
   bool savePreTriggers_;
+
+  // write out showrs
+  bool writeOutShowers_;
 
   // switch to enable the integrated local triggers in ME11 and ME21
   bool runME11ILT_;

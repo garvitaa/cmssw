@@ -608,10 +608,10 @@ namespace edm {
       //use to give priorities on an error to ones from Paths
       auto pathErrorHolder = std::make_unique<std::atomic<std::exception_ptr*>>(nullptr);
       auto pathErrorPtr = pathErrorHolder.get();
+      ServiceWeakToken weakToken = serviceToken;
       auto allPathsDone = make_waiting_task(
-          tbb::task::allocate_root(),
-          [iTask, this, serviceToken, pathError = std::move(pathErrorHolder)](std::exception_ptr const* iPtr) mutable {
-            ServiceRegistry::Operate operate(serviceToken);
+          [iTask, this, weakToken, pathError = std::move(pathErrorHolder)](std::exception_ptr const* iPtr) mutable {
+            ServiceRegistry::Operate operate(weakToken.lock());
 
             std::exception_ptr ptr;
             if (pathError->load()) {
@@ -626,28 +626,27 @@ namespace edm {
       //The holder guarantees that if the paths finish before the loop ends
       // that we do not start too soon. It also guarantees that the task will
       // run under that condition.
-      WaitingTaskHolder allPathsHolder(allPathsDone);
+      WaitingTaskHolder allPathsHolder(*iTask.group(), allPathsDone);
 
-      auto pathsDone = make_waiting_task(tbb::task::allocate_root(),
-                                         [allPathsHolder, pathErrorPtr, transitionInfo = info, this, serviceToken](
+      auto pathsDone = make_waiting_task([allPathsHolder, pathErrorPtr, transitionInfo = info, this, weakToken](
                                              std::exception_ptr const* iPtr) mutable {
-                                           ServiceRegistry::Operate operate(serviceToken);
+        ServiceRegistry::Operate operate(weakToken.lock());
 
-                                           if (iPtr) {
-                                             //this is used to prioritize this error over one
-                                             // that happens in EndPath or Accumulate
-                                             pathErrorPtr->store(new std::exception_ptr(*iPtr));
-                                           }
-                                           finishedPaths(*pathErrorPtr, std::move(allPathsHolder), transitionInfo);
-                                         });
+        if (iPtr) {
+          //this is used to prioritize this error over one
+          // that happens in EndPath or Accumulate
+          pathErrorPtr->store(new std::exception_ptr(*iPtr));
+        }
+        finishedPaths(*pathErrorPtr, std::move(allPathsHolder), transitionInfo);
+      });
 
       //The holder guarantees that if the paths finish before the loop ends
       // that we do not start too soon. It also guarantees that the task will
       // run under that condition.
-      WaitingTaskHolder taskHolder(pathsDone);
+      WaitingTaskHolder taskHolder(*iTask.group(), pathsDone);
 
       //start end paths first so on single threaded the paths will run first
-      WaitingTaskHolder hAllPathsDone(allPathsDone);
+      WaitingTaskHolder hAllPathsDone(*iTask.group(), allPathsDone);
       for (auto it = end_paths_.rbegin(), itEnd = end_paths_.rend(); it != itEnd; ++it) {
         it->processOneOccurrenceAsync(hAllPathsDone, info, serviceToken, streamID_, &streamContext_);
       }

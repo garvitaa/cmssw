@@ -386,9 +386,9 @@ namespace edm {
     T::setStreamContext(streamContext_, principal);
 
     auto id = principal.id();
+    ServiceWeakToken weakToken = token;
     auto doneTask = make_waiting_task(
-        tbb::task::allocate_root(),
-        [this, iHolder, id, cleaningUpAfterException, token](std::exception_ptr const* iPtr) mutable {
+        [this, iHolder, id, cleaningUpAfterException, weakToken](std::exception_ptr const* iPtr) mutable {
           std::exception_ptr excpt;
           if (iPtr) {
             excpt = *iPtr;
@@ -401,17 +401,17 @@ namespace edm {
               if (ex.context().empty()) {
                 ost << "Processing " << T::transitionName() << " " << id;
               }
-              ServiceRegistry::Operate op(token);
+              ServiceRegistry::Operate op(weakToken.lock());
               addContextAndPrintException(ost.str().c_str(), ex, cleaningUpAfterException);
               excpt = std::current_exception();
             }
 
-            ServiceRegistry::Operate op(token);
+            ServiceRegistry::Operate op(weakToken.lock());
             actReg_->preStreamEarlyTerminationSignal_(streamContext_, TerminationOrigin::ExceptionFromThisContext);
           }
           // Caught exception is propagated via WaitingTaskHolder
           CMS_SA_ALLOW try {
-            ServiceRegistry::Operate op(token);
+            ServiceRegistry::Operate op(weakToken.lock());
             T::postScheduleSignal(actReg_.get(), &streamContext_);
           } catch (...) {
             if (not excpt) {
@@ -422,7 +422,8 @@ namespace edm {
         });
 
     auto task = make_functor_task(
-        tbb::task::allocate_root(), [this, h = WaitingTaskHolder(doneTask), info = transitionInfo, token]() mutable {
+        [this, h = WaitingTaskHolder(*iHolder.group(), doneTask), info = transitionInfo, weakToken]() mutable {
+          auto token = weakToken.lock();
           ServiceRegistry::Operate op(token);
           // Caught exception is propagated via WaitingTaskHolder
           CMS_SA_ALLOW try {
@@ -449,9 +450,16 @@ namespace edm {
       //Enqueueing will start another thread if there is only
       // one thread in the job. Having stream == 0 use spawn
       // avoids starting up another thread when there is only one stream.
-      tbb::task::spawn(*task);
+      iHolder.group()->run([task]() {
+        TaskSentry s{task};
+        task->execute();
+      });
     } else {
-      tbb::task::enqueue(*task);
+      tbb::task_arena arena{tbb::task_arena::attach()};
+      arena.enqueue([task]() {
+        TaskSentry s{task};
+        task->execute();
+      });
     }
   }
 }  // namespace edm

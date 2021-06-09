@@ -15,7 +15,6 @@
 //#include "DataFormats/Math/interface/LorentzVector.h"
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/GeometryVector/interface/GlobalVector.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include <vector>
 #include <limits>
 
@@ -788,6 +787,7 @@ namespace reco {
     // setters
     void setCorrectedEcalEnergyError(float newEnergyError);
     void setCorrectedEcalEnergy(float newEnergy);
+    void setCorrectedEcalEnergy(float newEnergy, bool rescaleDependentValues);
     void setTrackMomentumError(float trackMomentumError);
     void setP4(P4Kind kind, const LorentzVector &p4, float p4Error, bool setCandidate);
     using RecoCandidate::setP4;
@@ -813,8 +813,8 @@ namespace reco {
     //bool isMomentumCorrected() const { return corrections_.isMomentumCorrected ; }
     float caloEnergy() const { return correctedEcalEnergy(); }
     bool isEnergyScaleCorrected() const { return isEcalEnergyCorrected(); }
-    void correctEcalEnergy(float newEnergy, float newEnergyError) {
-      setCorrectedEcalEnergy(newEnergy);
+    void correctEcalEnergy(float newEnergy, float newEnergyError, bool corrEovP = true) {
+      setCorrectedEcalEnergy(newEnergy, corrEovP);
       setEcalEnergyError(newEnergyError);
     }
     void correctMomentum(const LorentzVector &p4, float trackMomentumError, float p4Error) {

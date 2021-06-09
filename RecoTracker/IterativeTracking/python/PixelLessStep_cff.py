@@ -5,6 +5,7 @@ from Configuration.Eras.Modifier_fastSim_cff import fastSim
 
 #for dnn classifier
 from Configuration.ProcessModifiers.trackdnn_cff import trackdnn
+from RecoTracker.IterativeTracking.dnnQualityCuts import qualityCutDictionary
 
 ##########################################################################
 # Large impact parameter tracking using TIB/TID/TEC stereo layer seeding #
@@ -18,8 +19,10 @@ for _eraName, _postfix, _era in _cfg.nonDefaultEras():
 
 # SEEDING LAYERS
 from RecoLocalTracker.SiStripClusterizer.SiStripClusterChargeCut_cfi import *
-pixelLessStepSeedLayers = cms.EDProducer('SeedingLayersEDProducer',
-    layerList = cms.vstring(
+import RecoTracker.TkSeedingLayers.seedingLayersEDProducer_cfi as _mod
+
+pixelLessStepSeedLayers = _mod.seedingLayersEDProducer.clone(
+    layerList = [
     #TIB
     'TIB1+TIB2+MTIB3','TIB1+TIB2+MTIB4',
     #TIB+TID
@@ -44,7 +47,7 @@ pixelLessStepSeedLayers = cms.EDProducer('SeedingLayersEDProducer',
     'TEC3_pos+TEC4_pos+MTEC5_pos','TEC3_neg+TEC4_neg+MTEC5_neg',
     'TEC3_pos+TEC5_pos+TEC6_pos', 'TEC3_neg+TEC5_neg+TEC6_neg',
     'TEC4_pos+TEC5_pos+TEC6_pos', 'TEC4_neg+TEC5_neg+TEC6_neg'    
-    ),
+    ],
     TIB = cms.PSet(
          TTRHBuilder    = cms.string('WithTrackAngle'), clusterChargeCut = cms.PSet(refToPSet_ = cms.string('SiStripClusterChargeCutTight')),
          matchedRecHits = cms.InputTag('siStripMatchedRecHits','matchedRecHit'),
@@ -344,11 +347,11 @@ trackingPhase1.toReplaceWith(pixelLessStep, pixelLessStepClassifier1.clone(
     qualityCuts = [-0.4,0.0,0.4]
 ))
 
-from RecoTracker.FinalTrackSelectors.TrackLwtnnClassifier_cfi import *
-from RecoTracker.FinalTrackSelectors.trackSelectionLwtnn_cfi import *
-trackdnn.toReplaceWith(pixelLessStep, TrackLwtnnClassifier.clone(
+from RecoTracker.FinalTrackSelectors.TrackTfClassifier_cfi import *
+from RecoTracker.FinalTrackSelectors.trackSelectionTf_cfi import *
+trackdnn.toReplaceWith(pixelLessStep, TrackTfClassifier.clone(
     src         = 'pixelLessStepTracks',
-    qualityCuts = [-0.6, -0.05, 0.5]
+    qualityCuts = qualityCutDictionary['PixelLessStep']
 ))
 (trackdnn & fastSim).toModify(pixelLessStep,vertices = 'firstStepPrimaryVerticesBeforeMixing')
 

@@ -125,12 +125,14 @@ private:
 
   template <typename Traits, typename Info>
   void doWork(edm::Worker* iBase, Info const& info, edm::ParentContext const& iContext) {
-    auto task = edm::make_empty_waiting_task();
-    task->increment_ref_count();
-    iBase->doWorkAsync<Traits>(
-        edm::WaitingTaskHolder(task.get()), info, edm::ServiceToken(), s_streamID0, iContext, nullptr);
-    task->wait_for_all();
-    if (auto e = task->exceptionPtr()) {
+    edm::FinalWaitingTask task;
+    tbb::task_group group;
+    edm::ServiceToken token;
+    iBase->doWorkAsync<Traits>(edm::WaitingTaskHolder(group, &task), info, token, s_streamID0, iContext, nullptr);
+    do {
+      group.wait();
+    } while (not task.done());
+    if (auto e = task.exceptionPtr()) {
       std::rethrow_exception(*e);
     }
   }
