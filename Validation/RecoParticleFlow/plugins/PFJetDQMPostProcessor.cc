@@ -89,7 +89,6 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
     iget_.setCurrentFolder(genjetDir);
     std::vector<std::string> sME_genjets = iget_.getMEs();
     std::for_each(sME_genjets.begin(), sME_genjets.end(), [&](auto& s) { s.insert(0, genjetDir); });
-    //for (unsigned int i=0; i<sME_genjets.size(); i++) std::cout << sME_genjets[i] << std::endl;
 
     iget_.setCurrentFolder(offsetDir);
     std::vector<std::string> sME_offset = iget_.getMEs();
@@ -98,14 +97,12 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
     iget_.setCurrentFolder(jetResponseDir[idir]);
     std::vector<std::string> sME_response = iget_.getMEs();
     std::for_each(sME_response.begin(), sME_response.end(), [&](auto& s) { s.insert(0, jetResponseDir[idir]); });
-    //for (unsigned int i=0; i<sME_response.size(); i++) std::cout << sME_response[i] << std::endl;
 
     iget_.setCurrentFolder(jetResponseDir[idir]);
 
     double ptBinsArray[ptBins.size()];
     unsigned int nPtBins = ptBins.size() - 1;
     std::copy(ptBins.begin(), ptBins.end(), ptBinsArray);
-    //for(unsigned int ipt = 0; ipt < ptBins.size(); ++ipt) std::cout << ptBins[ipt] << std::endl;
 
     std::string stitle;
     char ctitle[50];
@@ -128,8 +125,6 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
     if (it == sME_offset.end()) std::cout << "ERROR: Offset Folder does not exist." <<std::endl;
     me = iget_.get(stitle);
     int nEvents = ((TH1F*)me->getTH1F())->GetEntries();
-    std::cout << "nEvents: " << nEvents <<std::endl;
-
     iget_.setCurrentFolder(jetResponseDir[idir]);
 
     //
@@ -155,6 +150,8 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
         me = iget_.get(stitle);
         h_genjet_unmatched_pt = (TH1F*)me->getTH1F();*/
 
+      }
+      if (jetResponseDir[idir].find("JEC") != std::string::npos) {
         // getting the histogram for reco jets
         stitle = jetResponseDir[idir] + "recojet_pt" + "_eta" + seta(etaBins[ieta]);
         me = iget_.get(stitle);
@@ -170,6 +167,8 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
         me = iget_.get(stitle);
         h_recojet_unmatched_pt = (TH1F*)me->getTH1F();
       }
+
+      //std::cout << "\n\n === Min Reco: " << h_recojet_pt->GetMinimum() << " Min Gen: " << h_genjet_pt->GetMinimum() << std::endl;
 
       stitle = "presponse_eta" + seta(etaBins[ieta]);
       // adding "Raw" to the title of raw jet response histograms
