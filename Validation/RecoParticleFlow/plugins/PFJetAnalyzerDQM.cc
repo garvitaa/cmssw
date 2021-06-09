@@ -143,8 +143,6 @@ private:
   void prepareRecoJetPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
   void prepareRecoJetMatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
   void prepareRecoJetUnmatchedPlots(const std::vector<edm::ParameterSet>& recojet_plots_pset);
-
-  double pt_reco_min=99999.,pt_recoRaw_min=99999., pt_gen_min=99999.; // for finding pT thresholds applied
 };
 
 void PFJetAnalyzerDQM::prepareJetResponsePlots(const std::vector<edm::ParameterSet>& response_plots) {
