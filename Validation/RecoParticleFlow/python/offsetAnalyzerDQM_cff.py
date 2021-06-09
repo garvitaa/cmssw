@@ -50,7 +50,7 @@ def createOffsetVPSet():
 def createTH1DVPSet():
     plots = []
     #hname, title, xmax
-    toplot = ( ("mu", "#mu", 0, default.muHighOffset), ("npv", "N_{PV}", 0, default.npvHighOffset), ("pv_z", "z_{PV}", -default.npvHighOffset, default.npvHighOffset) )
+    toplot = ( ("mu", "#mu", 0, default.muHighOffset), ("npv", "N_{PV}", 0, default.npvHighOffset), ("pv_z", "z_{PV}", -default.pvzHighOffset, default.npzHighOffset) )
 
     for hname, title, xmin, xmax in toplot :
         plots += [ plotPSet(
@@ -92,4 +92,3 @@ offsetDQMPostProcessor = DQMEDHarvester("OffsetDQMPostProcessor",
     npvHigh = cms.untracked.int32( default.npvHighOffset )                                        
                                         
 )
-
