@@ -230,9 +230,9 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
 
       if (jetResponseDir[idir].find("noJEC") != std::string::npos) {
         h_efficiency->Divide(h_genjet_matched_pt, h_genjet_pt, 1, 1, "B");
-
+      }
+      if (jetResponseDir[idir].find("JEC") != std::string::npos) {
         h_purity->Divide(h_recojet_matched_pt, h_recojet_pt, 1, 1, "B"); //"cl=0.683 b(1,1) mode"
-
         h_ratePUJet = (TH1F*) h_recojet_unmatched_pt->Clone();
         h_ratePUJet->SetName("h_ratePUJet");
         h_ratePUJet->Scale(1./double(nEvents));
@@ -303,7 +303,8 @@ void PFJetDQMPostProcessor::dqmEndJob(DQMStore::IBooker& ibook_, DQMStore::IGett
         stitle = "efficiency_eta" + seta(etaBins[ieta]);
         me = ibook_.book1D(stitle.c_str(), h_efficiency);
         vME_efficiency.push_back(me);
-
+      }
+      if (jetResponseDir[idir].find("JEC") != std::string::npos) {
         stitle = "purity_eta" + seta(etaBins[ieta]);
         me = ibook_.book1D(stitle.c_str(), h_purity);
         vME_purity.push_back(me);
